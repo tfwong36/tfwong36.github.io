@@ -179,6 +179,7 @@
         <p class="date">Your Bank Account -${{ money }}</p>
         <p class="text">Salary Review Delay Counter</p>
         </br>
+        <input type="checkbox" v-model="isInclDouble" /> + 2x Pay in Dec
         <input type="text" placeholder="Expected Increment in HKD"  v-model.number="expected"/>
         <!-- <input type="text" placeholder="Phone" /> -->
     </div>
@@ -193,11 +194,12 @@
                 date: '',
                 expected: '',
                 money: '',
+                isInclDouble: false,
             },
         });
 
         var week = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
-        var timerID = setInterval(countUpFromTime, 1000);
+        var timerID = setInterval(countUpFromTime, 500);
         countUpFromTime();
         // updateTime();
 
@@ -231,9 +233,16 @@
             //console.log(hours, mins, secs)
             clock.time = zeroPadding(hours, 2) + ':' + zeroPadding(mins, 2) + ':' + zeroPadding(secs, 2);
             clock.date = zeroPadding(diff) + " days";
-            console.log("(date_2.getTime() - date_1.getTime())/100", (date_1.getTime() - date_2.getTime())/100);
-            console.log("Number(clock.expected)", Number(clock.expected));
-            clock.money = Math.round(((date_2.getTime() - date_1.getTime())/1000) * (Number(clock.expected)/30/3600/24) * 10000) / 10000;
+            //console.log("(date_2.getTime() - date_1.getTime())/100", (date_1.getTime() - date_2.getTime())/100);
+            //console.log("Number(clock.expected)", Number(clock.expected));
+            if (clock.isInclDouble){
+                clock.money = Math.round((((date_2.getTime() - date_1.getTime())/1000) * (Number(clock.expected)/30/3600/24) * 10000)) / 10000;
+                clock.money = Number(clock.expected) + Number(clock.money);
+                //console.log("included");
+            } else {
+                clock.money = Math.round((((date_2.getTime() - date_1.getTime())/1000) * (Number(clock.expected)/30/3600/24) * 10000)) / 10000;
+                //console.log("noooooooooo");
+            }
             // clock.date = zeroPadding(years, 4) + '-' + zeroPadding(months+1, 2) + '-' + zeroPadding(days, 2) + ' ' + week[days];
         }
 
