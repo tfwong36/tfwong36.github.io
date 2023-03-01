@@ -181,6 +181,8 @@
         </br>
         <input type="checkbox" v-model="isInclDouble" /> + 2x Pay in Dec
         <input type="text" placeholder="Expected Increment in HKD"  v-model.number="expected"/>
+        <p>Next Payroll Date is {{ payrollDate }}</p>
+        <p>(still has {{ daysCount }} days)</p>
         <!-- <input type="text" placeholder="Phone" /> -->
     </div>
     <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
@@ -195,13 +197,32 @@
                 expected: '',
                 money: '',
                 isInclDouble: false,
+                payrollDate: '',
+                daysCount: '',
             },
         });
 
         var week = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
         var timerID = setInterval(countUpFromTime, 500);
         countUpFromTime();
+        clock.payrollDate = new Date().getFullYear() + '-' + zeroPadding(new Date().getMonth(), 2) + '-15';
+        clock.daysCount = getNextPayroll();
+        
+        function getNextPayroll(){
+            if ( new Date().getDate() == 15 ){
+                return "today";
+            }
+            if ( new Date().getDate() > 15){
+                return daysdiff(new Date(), new Date().getFullYear() + '-' + zeroPadding(new Date().getMonth(), 2) + '-15');
+            }
+            if ( new Date().getDate() < 15){
+                return 15 - new Date().getDate();
+            }
+        }
+
+        console.log(getNextPayroll());
         // updateTime();
+
 
         function countUpFromTime(countFrom, id) {
             let date_1 = new Date("2022-10-01T09:00:00");
