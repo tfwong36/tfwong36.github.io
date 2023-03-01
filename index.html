@@ -257,8 +257,7 @@
             //console.log("(date_2.getTime() - date_1.getTime())/100", (date_1.getTime() - date_2.getTime())/100);
             //console.log("Number(clock.expected)", Number(clock.expected));
             if (clock.isInclDouble){
-                clock.money = Math.round((((date_2.getTime() - date_1.getTime())/1000) * (Number(clock.expected)/30/3600/24) * 10000)) / 10000;
-                clock.money = Number(clock.expected) + Number(clock.money);
+                clock.money = Math.round((Number(clock.expected) + Number((((date_2.getTime() - date_1.getTime())/1000) * (Number(clock.expected)/30/3600/24))))* 10000) / 10000;
                 //console.log("included");
             } else {
                 clock.money = Math.round((((date_2.getTime() - date_1.getTime())/1000) * (Number(clock.expected)/30/3600/24) * 10000)) / 10000;
