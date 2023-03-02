@@ -205,7 +205,7 @@
         var week = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
         var timerID = setInterval(countUpFromTime, 500);
         countUpFromTime();
-        clock.payrollDate = new Date().getFullYear() + '-' + zeroPadding(new Date().getMonth(), 2) + '-15';
+        clock.payrollDate = new Date().getFullYear() + '-' + zeroPadding(new Date().getMonth()+1, 2) + '-15';
         clock.daysCount = getNextPayroll();
         
         function getNextPayroll(){
