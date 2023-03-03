@@ -244,9 +244,9 @@
         <p>(still has {{ daysCount }} days)</p>
         <br/>
         <div class="Row">
-            <div @mouseover="mouseOver(0)" style="width:25%;opacity: 1;" class="Column trickyBtn"><button class="button-6">HQ +$ Approve Button</button></div>
-            <div @mouseover="mouseOver(1)" style="width:25%;opacity: 0;" class="Column trickyBtn"><button class="button-6">HQ +$ Approve Button</button></div>
-            <div @mouseover="mouseOver(2)" style="width:25%;opacity: 0;" class="Column trickyBtn"><button class="button-6">HQ +$ Approve Button</button></div>
+            <div @mouseover="mouseOver(0)" @mousedown="mouseOver(0)" style="width:25%;opacity: 1;" class="Column trickyBtn"><button class="button-6">HQ +$ Approve Button</button></div>
+            <div @mouseover="mouseOver(1)" @mousedown="mouseOver(1)" style="width:25%;opacity: 0;" class="Column trickyBtn"><button class="button-6">HQ +$ Approve Button</button></div>
+            <div @mouseover="mouseOver(2)" @mousedown="mouseOver(2)" style="width:25%;opacity: 0;" class="Column trickyBtn"><button class="button-6">HQ +$ Approve Button</button></div>
         </div>
         <!-- <input type="text" placeholder="Phone" /> -->
     </div>
