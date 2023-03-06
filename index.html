@@ -233,13 +233,15 @@
     <div id="app">
     </div>
     <div id="clock">
-        <p class="date">{{ date }}</p>
-        <p class="time">{{ time }}</p>
-        <p class="date">Your Bank Account</p><p>-${{ money }}</p>
-        <p class="text">Salary Review Delay Counter</p>
-        </br>
+        <p class="time">{{ date }}</p>
+        <p class="date">{{ time }}</p>
+        <br/>
+        <p class="date">Your Bank Account</p><p class="date">-${{ money }}</p>
+        <br/>
         <input type="checkbox" v-model="isInclDouble" /> + 2x Pay in Dec
         <input type="text" placeholder="Expected Increment in HKD"  v-model.number="expected" style="width:100%"/>
+        <p class="date">Salary Review Delay Counter</p>
+        <br/>
         <p>Next Payroll Date is {{ payrollDate }}</p>
         <p>(still has {{ daysCount }} days)</p>
         <br/>
@@ -272,16 +274,19 @@
                     var cur = 0;
                     for ( i = 0 ; i < btns.length; i ++){
                         if (btns[id].style.opacity == 0){
+                            /* dont process if the element is invisible */
                             return;
                         }
                         if (btns[i].style.opacity == 1){
                             btns[i].style.opacity = 0;
-                            cur = i;
+                            /* //record the last visible element */
+                            cur = i; 
                             break;
                         }
                     }
                     var ran = Math.floor(Math.random() * 3);
                     while (ran == cur){
+                        /* //generate until not that element again */
                         ran = Math.floor(Math.random() * 3);
                     }
                     btns[ran].style.opacity = 1;
