@@ -26,6 +26,33 @@
         margin: 0;
         padding: 0;
     }
+    #maze-word {
+        font-family: 'Share Tech Mono', monospace;
+        color: rgb(229, 255, 0);
+        text-align: center;
+        position: absolute;
+        left: 50%;
+        top: 85%;
+        width: 500px;
+        transform: translate(-50%, 100%);
+        color: #daf6ff;
+        text-shadow: 0 0 20px rgba(10, 175, 230, 1), 0 0 20px rgba(10, 175, 230, 0);
+    }
+    #maze-word .large {
+        letter-spacing: 0.05em;
+        font-size: 80px;
+        padding: 5px 0;
+    }
+    #maze-word .medium {
+        letter-spacing: 0.1em;
+        font-size: 24px;
+    }
+    #maze-word .small {
+        letter-spacing: 0.1em;
+        font-size: 12px;
+        padding: 20px 0 0;
+    }
+
     #clock {
         font-family: 'Share Tech Mono', monospace;
         color: #fff;
@@ -33,7 +60,7 @@
         position: absolute;
         left: 50%;
         top: 50%;
-        transform: translate(-50%, -50%);
+        transform: translate(-50%, -75%);
         color: #daf6ff;
         text-shadow: 0 0 20px rgba(10, 175, 230, 1), 0 0 20px rgba(10, 175, 230, 0);
     }
@@ -337,7 +364,7 @@
         place-self: center center;*/
         top: 30vh;
         left: 50%;
-        transform: translate(-50%, -50%);
+        transform: translate(-50%, 140%);
     }
 
     .mbox,
@@ -425,15 +452,16 @@
         <p class="date">Salary Review Delay Counter</p>
         <br/>
         <p>Next Payroll Date is {{ payrollDate }}</p>
-        <p>(still has {{ daysCount }} days)</p>
+        <p>{{ daysCount }}</p>
         <br/>
         <div class="Row">
-            <div @mouseover="mouseOver(0)" @mousedown="mouseOver(0)" style="width:25%;opacity: 1;" class="Column trickyBtn"><button class="button-6">HQ +$ Approve Button</button></div>
-            <div @mouseover="mouseOver(1)" @mousedown="mouseOver(1)" style="width:25%;opacity: 0;" class="Column trickyBtn"><button class="button-6">HQ +$ Approve Button</button></div>
-            <div @mouseover="mouseOver(2)" @mousedown="mouseOver(2)" style="width:25%;opacity: 0;" class="Column trickyBtn"><button class="button-6">HQ +$ Approve Button</button></div>
+            <div @mouseover="mouseOver(0)" @mousedown="mouseOver(0)" style="width:25%;opacity: 1; height:auto;" class="Column trickyBtn"><button class="button-6">HQ +$ Approve Button</button></div>
+            <div @mouseover="mouseOver(1)" @mousedown="mouseOver(1)" style="width:25%;opacity: 0; height:auto;" class="Column trickyBtn"><button class="button-6">HQ +$ Approve Button</button></div>
+            <div @mouseover="mouseOver(2)" @mousedown="mouseOver(2)" style="width:25%;opacity: 0; height:auto;" class="Column trickyBtn"><button class="button-6">HQ +$ Approve Button</button></div>
         </div>
         <!-- <input type="text" placeholder="Phone" /> -->
     </div>
+    
     
     <div id="container">
         <div class="mbox">
@@ -446,10 +474,13 @@
             </div>
             <div class="barrier" id="top"></div>
             <div class="barrier" id="bottom"></div>
+            <div id="maze-word">
+                <p class="medium" id="mazecaption">Hit ↑ ↓ ← → Get Your Salary!</p>
+            </div>
         </div>
             </div>
-        <div class="controls" hidden>
-            <div class="buttons">
+        <div class="controls">
+            <div class="buttons" hidden="">
                 <button class="btn" id="bu"><div class="chevron">↑</div></button>
                 <button class="btn" id="bd"><div class="chevron">↓</div></button>
                 <button class="btn" id="bl"><div class="chevron">←</div></button>
@@ -507,13 +538,13 @@
         
         function getNextPayroll(){
             if ( new Date().getDate() == 15 ){
-                return "today";
+                return "🤣🤣 Today is payroll day! You still cannot get it? 🤣🤣 ";
             }
             if ( new Date().getDate() > 15){
-                return daysdiff(new Date(), new Date().getFullYear() + '-' + zeroPadding(new Date().getMonth(), 2) + '-15');
+                return "(still has "+ daysdiff(new Date(), new Date().getFullYear() + '-' + zeroPadding(new Date().getMonth(), 2) + '-15') +" days)";
             }
             if ( new Date().getDate() < 15){
-                return 15 - new Date().getDate();
+                return "(still has "+ 15 - new Date().getDate() +" days)";
             }
         }
 
@@ -657,6 +688,7 @@
         //console.log(nogoX, nogoX2, nogoY, nogoY2);
 
         document.addEventListener("keydown", keys);
+        var stepCount = 0;
 
         function keys(e) {
             let code = e.code;
@@ -711,6 +743,7 @@
             animKeys(bu);
             if (checkYboundry("u")) {
                 thingie.style.top = thingie.offsetTop - step + "px";
+                document.getElementById('mazecaption').textContent = ++stepCount * 10 + " days";
                 updateEmo(false);
             }
         }
@@ -719,6 +752,7 @@
             animKeys(bd);
             if (checkYboundry("d")) {
                 thingie.style.top = thingie.offsetTop + step + "px";
+                document.getElementById('mazecaption').textContent = ++stepCount * 10 + " days";
                 updateEmo(false);
             }
         }
@@ -727,6 +761,7 @@
             animKeys(bl);
             if (checkXboundry("l")) {
                 thingie.style.left = thingie.offsetLeft - step + "px";
+                document.getElementById('mazecaption').textContent = ++stepCount * 10 + " days";
             }
             updateEmo(true);
         }
@@ -735,6 +770,7 @@
             animKeys(br);
             if (checkXboundry("r")) {
                 thingie.style.left = thingie.offsetLeft + step + "px";
+                document.getElementById('mazecaption').textContent = ++stepCount * 10 + " days";
             }
             updateEmo(true);
         }
@@ -1027,6 +1063,7 @@
                 if (thingie.offsetLeft > mazeWidth) {
                     emo.innerHTML = "";
                     home.innerHTML = "🥳";
+                    document.getElementById('mazecaption').textContent = "🥳 You spent " + ++stepCount * 10 + " days 🥳";
                 }
                 prevl = thingie.offsetLeft;
             } else {
