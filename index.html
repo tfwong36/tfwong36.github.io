@@ -533,7 +533,12 @@
         var week = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
         var timerID = setInterval(countUpFromTime, 500);
         countUpFromTime();
-        clock.payrollDate = new Date().getFullYear() + '-' + zeroPadding(new Date().getMonth()+1, 2) + '-15';
+        var curTime = new Date();
+        if (curTime.getDate() <= 15){
+            clock.payrollDate = new Date().getFullYear() + '-' + zeroPadding(new Date().getMonth()+1, 2) + '-15';
+        } else {
+            clock.payrollDate = new Date().getFullYear() + '-' + zeroPadding(new Date().getMonth()+2, 2) + '-15';
+        }
         clock.daysCount = getNextPayroll();
         
         function getNextPayroll(){
@@ -547,10 +552,10 @@
                 return "🤣🤣 Today is payroll day! You still cannot get it? 🤣🤣 ";
             }
             if ( new Date().getDate() > 15){
-                return "(still has "+ daysdiff(new Date(), new Date(new Date().getFullYear() + '-' + zeroPadding(new Date().getMonth(), 2) + '-15')) +" days)";
+                return "(wait for another "+ daysdiff(new Date(new Date().getFullYear() + '-' + zeroPadding(new Date().getMonth()+2, 2) + '-15'), new Date()) +" days)";
             }
             if ( new Date().getDate() < 15){
-                return "(still has "+ 15 - new Date().getDate() +" days)";
+                return "(wait for another "+ 15 - new Date().getDate() +" days)";
             }
         }
 
