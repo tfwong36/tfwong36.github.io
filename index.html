@@ -78,6 +78,11 @@
         font-size: 12px;
         padding: 20px 0 0;
     }
+    #clock .appname {
+        color: lightskyblue;
+        letter-spacing: 0.1em;
+        font-size: 24px;
+    }
     
     button, input, select, textarea {
 	 font-family: inherit;
@@ -449,7 +454,7 @@
         <br/>
         <input type="checkbox" v-model="isInclDouble" /> + 2x Pay in Dec
         <input type="text" placeholder="Expected Increment in HKD"  v-model.number="expected" style="width:100%"/>
-        <p class="date">Salary Review Delay Counter</p>
+        <p class="appname">Salary Review Delay Counter</p>
         <br/>
         <p>Next Payroll Date is {{ payrollDate }}</p>
         <p>{{ daysCount }}</p>
