@@ -139,7 +139,7 @@
           yes_btn: "Yes",
           no_btn: "No",
           currentImage: 'https://enigmadesigncompany.com/image/cache/catalog/massupload/ENIG00618-550x550w.jpg',
-          currentText: 'Will you be my Valentine?',
+          currentText: '今日咁特別 要唔要出嚟收朱古力?🍫',
           yesImage: 'https://i.pinimg.com/474x/60/23/73/602373c07c8225cc9077e75a9d21622c.jpg',
           yesText: 'Yeahhhhhh! You said Yes!',
           noImages: [
@@ -147,8 +147,8 @@
             'https://media.tenor.com/K02iBpIj13sAAAAe/snoopy-crying.png'
           ],
           noTexts: [
-            'I believe... you\'ve clicked the wrong button<br>Click carefully 🙂',
-            'Sad Snoopy :('
+            '係唔係撳制錯啊<br>可以再撳多次喎🙂',
+            'Sad Snoopy 🙁 唔好玩嘢 🙁'
           ],
           noImageIndex: 0,
           showNoButton: true, // Initialize the "No" button to show on load
@@ -162,7 +162,7 @@
         };
       },
       created() {
-        this.encryptedUrl = 'Hh0XGwpMRkwKCR9HFAMYAhoCGwlYCgwGVgUMDQ9GBgEMBRxLUVZZTENdW1NIR1pFHxwOHV4EEh8MBg4cV0wlW1xPL0ZSQFNRWw==';
+        this.encryptedUrl = 'Hh0XGwpMRkwKCR9HFAMYAhoCGwlYCgwGVgUMDQ9GBgEMBRxLUVZZTENdW1NIR1pFHxwOHV4EEh8MBg4cV0wlW1xPL0ZSQFNRW04/RkxaLVxOLUYqOw==';
         // 'Hh0XGwpMRkwMFhkODw5XFQYO';
       },
       methods: {
@@ -175,7 +175,7 @@
                 setTimeout(() => {
                     console.log(this.decryptedUrl)
                     window.open(this.decryptedUrl, '_blank');
-                }, 3000); // 3000 milliseconds = 3 seconds
+                }, 2000); // 3000 milliseconds = 3 seconds
             } else {
                 this.currentImage = this.noImages[this.noImageIndex];
                 this.currentText = this.noTexts[this.noImageIndex];
@@ -196,23 +196,11 @@
         },
         ///////////////////////////////
         //  Auth
-        // Simple encryption function (XOR-based for demonstration)
-        encrypt(text, key) {
-            return btoa(text.split('').map((char, i) => {
-                return String.fromCharCode(char.charCodeAt(0) ^ key.charCodeAt(i % key.length));
-            }).join(''));
-        },
-        // Simple decryption function (XOR-based for demonstration)
         decrypt(encrypted, key) {
             return atob(encrypted).split('').map((char, i) => {
                 return String.fromCharCode(char.charCodeAt(0) ^ key.charCodeAt(i % key.length));
             }).join('');
         },
-        // Function to encrypt the URL
-        encryptUrl(url, key) {
-            this.encryptedUrl = this.encrypt(url, key);
-        },
-        // Function to validate the entered key and then decrypt the URL
         validateKey() {
             if (this.inputKey) {
                 const decryptedUrl = this.decrypt(this.encryptedUrl, this.inputKey.toLowerCase());
