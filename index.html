@@ -29,7 +29,7 @@
       position: relative;
     }
     .flip-image {
-      max-width: 90vw;
+      max-width: 70vw;
       max-height: 60vh;
       width: auto;
       height: auto;
@@ -61,6 +61,42 @@
         transform: scale(1.3);
       }
     }
+    .auth-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      //background-color: #fce4ec; /* Light pink background for the auth box */
+    }
+    
+    .auth-box input {
+      padding: 10px 15px;
+      margin-bottom: 10px;
+      font-size: 18px;
+      border: 1px solid #f48fb1; /* Pink border for the input */
+      border-radius: 5px; /* Rounded corners for the input */
+    }
+    
+    .auth-box button {
+      padding: 10px 20px;
+      font-size: 18px;
+      background-color: #f48fb1; /* Pink background for the button */
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s ease; /* Smooth background color transition */
+    }
+    
+    .auth-box button:hover {
+      background-color: #f06292; /* Slightly darker pink on hover */
+    }
+    
+    .auth-box .error {
+      color: #d32f2f; /* Red color for error messages */
+      margin-top: 5px;
+    }
     
     .hidden {
         display: none; /* Add class to hide element */
@@ -69,25 +105,31 @@
 </head>
 <body>
   <div id="app" class="flip-book">
-    <h1>Hello UAT</h1>
-    <img :src="currentImage" alt="Flip Image" class="flip-image">
-    <div class="text-content">
-        <p v-html="currentText"></p>
-    </div>
-    <div>
-      <button @click="setImage(true)" class="yes-button mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent">
-        {{yes_btn}}
-      </button>
-      <button v-show="showNoButton" @click="setImage(false); moveNoButton();" class="no-button mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect">
-        {{no_btn}}
-      </button>
+    <!-- content -->
+    <div v-if="keyEntered" class="flip-book">
+        <h1>Hello {{inputKey}}</h1>
+        <img :src="currentImage" alt="Flip Image" class="flip-image">
+        <div class="text-content">
+            <p v-html="currentText"></p>
+        </div>
+        <div>
+        <button @click="setImage(true)" class="yes-button mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent">
+            {{yes_btn}}
+        </button>
+        <button v-show="showNoButton" @click="setImage(false); moveNoButton();" class="no-button mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect">
+            {{no_btn}}
+        </button>
+        </div>
     </div>
     
-    <div v-if="!keyEntered" class="auth-box">
-        <input v-model="inputKey" type="text" placeholder="Enter the key...">
-        <button @click="validateKey">Submit</button>
+    <!-- auth box -->
+    <div v-else class="auth-box"> <!-- This div will show up if the correct key hasn't been entered -->
+        <h2>Who are you?</h2>
+        <input v-model="inputKey" type="text" placeholder="Enter the key..."/>
+        <button @click="validateKey">Unlock</button>
         <p v-if="authError" class="error">{{ authError }}</p>
     </div>
+
   </div>
 
   <script>
@@ -120,23 +162,26 @@
         };
       },
       created() {
-          this.encryptedUrl = 'Hh0XGwpMRkwMFhkODw5XFQYO';
+        this.encryptedUrl = 'Hh0XGwpMRkwKCR9HFAMYAhoCGwlYCgwGVgUMDQ9GBgEMBRxLUVZZTENdW1NIR1pFHxwOHV4EEh8MBg4cV0wlW1xPL0ZSQFNRWw==';
+        // 'Hh0XGwpMRkwMFhkODw5XFQYO';
       },
       methods: {
         setImage(isYes) {
             if (isYes) {
-            this.currentImage = this.yesImage;
-            this.currentText = this.yesText;
-            this.showNoButton = false; // Hide "No" button when "Yes" is clicked
+                this.currentImage = this.yesImage;
+                this.currentText = this.yesText;
+                this.showNoButton = false; // Hide "No" button when "Yes" is clicked
+                
+                setTimeout(() => {
+                    console.log(this.decryptedUrl)
+                    window.open(this.decryptedUrl, '_blank');
+                }, 3000); // 3000 milliseconds = 3 seconds
             } else {
-            this.currentImage = this.noImages[this.noImageIndex];
-            this.currentText = this.noTexts[this.noImageIndex];
-            this.noImageIndex = (this.noImageIndex + 1) % this.noImages.length;
-            this.showNoButton = true; // Make sure "No" button reappears when "No" is clicked
+                this.currentImage = this.noImages[this.noImageIndex];
+                this.currentText = this.noTexts[this.noImageIndex];
+                this.noImageIndex = (this.noImageIndex + 1) % this.noImages.length;
+                this.showNoButton = true; // Make sure "No" button reappears when "No" is clicked
             }
-            setTimeout(() => {
-                window.open('https://www.google.com', '_blank');
-            }, 3000); // 3000 milliseconds = 3 seconds
         },
         moveNoButton() {
           const noButton = document.querySelector('.no-button');
@@ -171,17 +216,15 @@
         validateKey() {
             if (this.inputKey) {
                 const decryptedUrl = this.decrypt(this.encryptedUrl, this.inputKey);
-                if (decryptedUrl.includes('https://')) {
+                this.decryptedUrl = decryptedUrl;
+                if (decryptedUrl.includes('https://api.whatsapp.com')) {
                     this.keyEntered = true;
                     this.authError = '';
-                    setTimeout(() => {
-                        window.open(decryptedUrl, '_blank');
-                    }, 3000);
                 } else {
-                    this.authError = 'Failed to decrypt URL.';
+                    this.authError = 'Only the right person can open the right webpage 🙂';
                 }
             } else {
-                this.authError = 'Please enter the key.';
+                this.authError = 'Put your name there~';
             }
         },
       },
