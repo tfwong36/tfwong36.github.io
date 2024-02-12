@@ -215,7 +215,7 @@
         // Function to validate the entered key and then decrypt the URL
         validateKey() {
             if (this.inputKey) {
-                const decryptedUrl = this.decrypt(this.encryptedUrl, this.inputKey);
+                const decryptedUrl = this.decrypt(this.encryptedUrl, this.inputKey.toLowerCase());
                 this.decryptedUrl = decryptedUrl;
                 if (decryptedUrl.includes('https://api.whatsapp.com')) {
                     this.keyEntered = true;
