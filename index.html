@@ -1,11 +1,779 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Snoopy Flip</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Kitchen Ops v24</title>
+    <style>
+        * { box-sizing: border-box; }
+
+        :root {
+            --blue: #2979ff;
+            --green: #00c853;
+            --yellow: #ffd600;
+            --red: #ff3d00;
+        }
+
+        [data-theme="dark"] {
+            --bg: #121212;
+            --panel: #1e1e1e;
+            --border: #333;
+            --text-main: #e0e0e0;
+            --text-sub: #888;
+            --input-bg: #2d2d2d;
+            --modal-bg: #1a1a1a;
+            --shadow: rgba(0,0,0,0.5);
+            --display-bg: rgba(128,128,128,0.05);
+            --handle-bg: #444;
+            --btn-active: rgba(41, 121, 255, 0.2);
+        }
+
+        [data-theme="light"] {
+            --bg: #f0f2f5;
+            --panel: #ffffff;
+            --border: #ccc;
+            --text-main: #333;
+            --text-sub: #666;
+            --input-bg: #fff;
+            --modal-bg: #fff;
+            --shadow: rgba(0,0,0,0.1);
+            --display-bg: #f5f5f5;
+            --handle-bg: #ddd;
+            --btn-active: rgba(41, 121, 255, 0.1);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text-main);
+            margin: 0;
+            height: 100vh;
+            display: flex; flex-direction: column; overflow: hidden;
+            transition: background 0.3s;
+        }
+
+        /* HEADER */
+        header {
+            height: 60px; background: var(--panel); border-bottom: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center; padding: 0 15px; flex-shrink: 0; z-index: 10;
+        }
+        .header-group { display: flex; align-items: center; gap: 8px; }
+        .clock { font-size: 1.2rem; font-weight: 700; color: var(--blue); font-variant-numeric: tabular-nums; }
+        
+        .icon-btn {
+            background: none; border: 1px solid var(--border); color: var(--text-main);
+            padding: 6px 10px; border-radius: 8px; cursor: pointer; font-size: 1.1rem;
+            display: flex; align-items: center; justify-content: center; transition: background 0.2s;
+        }
+        .icon-btn.active { background: var(--btn-active); border-color: var(--blue); color: var(--blue); }
+
+        /* LAYOUT */
+        .container { flex: 1; display: grid; grid-template-columns: 280px 1fr; overflow: hidden; }
+
+        @media (max-width: 800px) { 
+            .container { display: flex; flex-direction: column; }
+            .sidebar {
+                border-right: none !important; border-bottom: 1px solid var(--border);
+                height: 30vh; min-height: 140px; max-height: 70vh;
+                position: relative; padding-bottom: 20px !important;
+                box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 5; flex-shrink: 0;
+            }
+            .resizer-bar {
+                display: flex; justify-content: center; align-items: center;
+                position: absolute; bottom: 0; left: 0; right: 0; height: 24px;
+                cursor: ns-resize; background: var(--panel); border-top: 1px solid var(--border);
+                z-index: 10; touch-action: none;
+            }
+            .resizer-pill { width: 50px; height: 5px; background-color: var(--handle-bg); border-radius: 3px; }
+        }
+
+        @media (min-width: 801px) {
+            .resizer-bar { display: none; }
+            .sidebar { height: auto !important; min-height: 0 !important; max-height: none !important; }
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            background: var(--bg); border-right: 1px solid var(--border);
+            display: flex; flex-direction: column; padding: 10px 15px; overflow: hidden; 
+        }
+        .section-title {
+            text-transform: uppercase; font-size: 0.8rem; color: var(--text-sub);
+            font-weight: bold; margin-bottom: 10px; border-bottom: 2px solid var(--blue);
+            padding-bottom: 5px; display: block; flex-shrink: 0;
+        }
+        .schedule-list { overflow-y: auto; flex: 1; -webkit-overflow-scrolling: touch; }
+
+        .task-row {
+            display: flex; justify-content: space-between; padding: 10px;
+            margin-bottom: 6px; background: var(--panel); border-radius: 6px;
+            border-left: 3px solid var(--border); align-items: center;
+            box-shadow: 0 1px 3px var(--shadow);
+        }
+        .task-row.first { border-left-color: var(--yellow); }
+        .task-row.highlight { border-left-color: var(--blue); }
+        .task-row.refill { border-left-color: var(--green); }
+        .task-time { font-weight: 700; font-size: 0.95rem; }
+
+        /* GRID */
+        .grid {
+            padding: 20px; display: grid; gap: 15px;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            grid-auto-rows: minmax(300px, auto);
+            overflow-y: auto; background: var(--bg); -webkit-overflow-scrolling: touch;
+        }
+
+        /* CARD */
+        .card {
+            background: var(--panel); border: 1px solid var(--border);
+            border-radius: 12px; padding: 15px; display: flex; flex-direction: column;
+            position: relative; box-shadow: 0 4px 6px var(--shadow);
+        }
+        .card-header {
+            display: flex; justify-content: space-between; align-items: center;
+            font-weight: bold; font-size: 1.1rem; margin-bottom: 5px;
+        }
+        .header-title-group { display: flex; align-items: center; gap: 8px; }
+        
+        .edit-link {
+            font-size: 0.8rem; color: var(--text-sub); text-decoration: underline; cursor: pointer; font-weight: normal;
+        }
+
+        .extend-btn {
+            background: transparent; border: 1px solid var(--blue); color: var(--blue);
+            font-size: 0.75rem; padding: 2px 6px; border-radius: 4px;
+            cursor: pointer; font-weight: bold; opacity: 0.6; transition: 0.2s;
+        }
+        .extend-btn:hover { opacity: 1; background: rgba(41, 121, 255, 0.1); }
+        .extend-btn:active { transform: scale(0.95); }
+
+        .display-area {
+            flex: 1; display: flex; flex-direction: column; justify-content: center;
+            align-items: center; margin: 10px 0; border-radius: 8px;
+            background: var(--display-bg); padding: 10px;
+        }
+        .main-val { font-size: 2rem; font-weight: 800; line-height: 1; margin-bottom: 5px; white-space: nowrap;}
+        .sub-lbl { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-sub); font-weight: bold; }
+        .mini-timer { font-size: 0.9rem; color: var(--text-sub); margin-top: 5px; font-weight: 500; }
+        .ampm-small { font-size: 1rem; margin-left: 2px; }
+
+        .refill-box {
+            margin-top: 10px; padding: 10px; border-radius: 6px;
+            background: rgba(41, 121, 255, 0.1); border: 1px dashed var(--blue);
+            display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem;
+        }
+        .refill-label { color: var(--text-main); font-weight: 600; font-size: 0.8rem; }
+        .refill-timer { font-weight: bold; color: var(--blue); font-variant-numeric: tabular-nums; font-size: 1.1rem; }
+
+        .btn { width: 100%; padding: 14px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 1rem; margin-top: auto; }
+
+        /* STATES */
+        .st-idle .main-val { color: var(--text-sub); } .st-idle .btn { background: #444; color: #fff; }
+        .st-cooking .main-val { color: var(--blue); } .st-cooking .btn { background: var(--blue); color: white; }
+        .st-fresh .main-val { color: var(--green); } .st-fresh .btn { background: var(--panel); border: 2px solid var(--border); color: var(--text-sub); }
+        .st-refill .main-val { color: var(--green); } .st-refill .btn { background: var(--blue); color: white; }
+        .st-warn .main-val { color: var(--yellow); } .st-exp .main-val { color: var(--red); }
+
+        /* MODALS */
+        .overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.92);
+            display: none; justify-content: center; align-items: center; z-index: 1000;
+        }
+        .wizard-box {
+            background: var(--modal-bg); padding: 20px; border-radius: 16px;
+            width: 85%; max-width: 320px; border: 1px solid var(--border);
+            display: flex; flex-direction: column; gap: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); max-height: 90vh; overflow-y: auto;
+        }
+        .wizard-header h2 { margin: 0; color: var(--text-main); font-size: 1.2rem; }
+        .wizard-header p { margin: 0 0 5px 0; color: var(--blue); font-weight: bold; font-size: 0.85rem; }
+        .wizard-question { font-size: 1rem; color: var(--text-sub); line-height: 1.3; }
+        .modal-input {
+            background: var(--input-bg); border: 2px solid var(--blue); color: var(--text-main);
+            font-size: 1.8rem; width: 100%; text-align: center; padding: 8px;
+            border-radius: 10px; font-weight: bold; box-sizing: border-box;
+        }
+        .wizard-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 5px; }
+        .btn-skip { background: transparent; border: 1px solid var(--border); color: var(--text-sub); font-size: 0.9rem; padding: 10px; }
+        .btn-save { background: var(--blue); color: white; font-size: 0.9rem; padding: 10px; }
+
+        /* Config Modal */
+        .config-row { background: var(--input-bg); padding: 12px; border-radius: 8px; margin-bottom: 8px; border: 1px solid var(--border); }
+        .config-row h4 { margin: 0 0 8px 0; color: var(--blue); display: flex; justify-content: space-between; font-size: 0.95rem; }
+        .config-inputs { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 8px; }
+        .cfg-grp label { font-size: 0.65rem; color: var(--text-sub); margin-bottom: 2px; text-transform: uppercase; }
+        .cfg-input { background: var(--bg); border: 1px solid var(--border); color: var(--text-main); padding: 4px; border-radius: 4px; font-size: 0.9rem; width: 100%; }
+
+    </style>
 </head>
-  <body>
-    Hello World
-  </body>
+<body>
+
+<div class="overlay" id="wizardModal">
+    <div class="wizard-box">
+        <div class="wizard-header">
+            <p id="wizardProgress">Item 1/7</p>
+            <h2 id="wizardName">Big Pearl</h2>
+        </div>
+        <div class="wizard-question">Check label. Expiry Time:</div>
+        <input type="time" id="wizardInput" class="modal-input">
+        <div class="wizard-actions">
+            <button class="btn btn-skip" onclick="wizardSkip()">Not Cooked</button>
+            <button class="btn btn-save" onclick="wizardSave()">Set</button>
+        </div>
+    </div>
+</div>
+
+<div class="overlay" id="editModal">
+    <div class="wizard-box">
+        <div class="wizard-header">
+            <h2 id="editTitle">Edit</h2>
+        </div>
+        <div class="wizard-question">Update expiry manually:</div>
+        <input type="time" id="editInput" class="modal-input">
+        <div class="wizard-actions">
+            <button class="btn btn-skip" onclick="closeEdit()">Cancel</button>
+            <button class="btn btn-save" onclick="saveEdit()">Save</button>
+        </div>
+    </div>
+</div>
+
+<div class="overlay" id="configModal">
+    <div class="wizard-box" style="max-width: 450px;">
+        <div class="wizard-header">
+            <h2>⚙️ Configuration</h2>
+            <p>Name, Cook(min), Shelf(min)</p>
+        </div>
+        <div id="configContainer"></div>
+        <div class="wizard-actions">
+            <button class="btn btn-skip" onclick="closeConfig()">Cancel</button>
+            <button class="btn btn-save" onclick="saveConfig()">Save</button>
+        </div>
+    </div>
+</div>
+
+<header>
+    <div class="header-group">
+        <span style="font-weight:bold; font-size:1.1rem;">Kitchen Ops</span>
+        <button class="icon-btn" id="btnFirstBatch" onclick="toggleFirstBatch()" title="Add First Batch Info">1️⃣</button>
+        <button class="icon-btn" onclick="startWizard()" title="Update All Expiry">⏰</button>
+        <button class="icon-btn" onclick="openConfig()" title="Settings">⚙️</button>
+        <button class="icon-btn" onclick="resetData()" title="Reset All Data" style="border-color:var(--red); color:var(--red)">🗑️</button>
+    </div>
+
+    <div class="header-group">
+        <button class="icon-btn" onclick="toggleTheme()" title="Toggle Theme">☀️</button>
+        <div class="clock" id="clock">12:00 PM</div>
+    </div>
+</header>
+
+<div class="container">
+    <div class="sidebar" id="sidebarSection">
+        <span class="section-title">Upcoming Tasks</span>
+        <div class="schedule-list" id="scheduleList"></div>
+        <div class="resizer-bar" id="dragHandle"><div class="resizer-pill"></div></div>
+    </div>
+    <div class="grid" id="cardGrid"></div>
+</div>
+
+<script>
+    const STORAGE_KEY = 'kitchen_ops_v24_data';
+    const KITCHEN_CLOSE_HOUR = 21; 
+
+    let items = {
+        'bp': { name: 'Big Pearl', cookTime: 90, shelfLife: 240 },
+        'sp': { name: 'Mini Pearl', cookTime: 30, shelfLife: 120 },
+        'amber': { name: 'Amber Pearl', cookTime: 90, shelfLife: 240 },
+        'rt': { name: 'Royal Tea', cookTime: 30, shelfLife: 240 },
+        'bt': { name: 'Black Tea', cookTime: 30, shelfLife: 240 },
+        'gt': { name: 'Green Tea', cookTime: 10, shelfLife: 240 },
+        'ot': { name: 'Oolong', cookTime: 30, shelfLife: 360 }
+    };
+
+    const firstBatchSchedule = [
+        { c: 'bp', t: '09:10', n: 'First Batch' },
+        { c: 'rt', t: '09:50', n: 'First Batch' },
+        { c: 'amber', t: '10:00', n: 'First Batch' },
+        { c: 'bt', t: '10:15', n: 'First Batch' },
+        { c: 'ot', t: '10:30', n: 'First Batch' },
+        { c: 'gt', t: '10:45', n: 'First Batch' }
+    ];
+
+    let inventory = {};
+    let wizardQueue = [];
+    let wizardIdx = 0;
+    let editTarget = null;
+    let showFirstBatch = false; 
+
+    // --- AUTO SAVE/LOAD SYSTEM ---
+    function loadState() {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+            try {
+                const parsed = JSON.parse(raw);
+                inventory = parsed.inventory;
+                // Recover Date objects from strings
+                for (let k in inventory) {
+                    if (inventory[k].startTime) inventory[k].startTime = new Date(inventory[k].startTime);
+                    if (inventory[k].expireTime) inventory[k].expireTime = new Date(inventory[k].expireTime);
+                    if (inventory[k].refillStart) inventory[k].refillStart = new Date(inventory[k].refillStart);
+                }
+                // Recover config if saved
+                if (parsed.items) items = parsed.items;
+            } catch(e) {
+                console.error("Save file corrupted, resetting");
+                resetData();
+            }
+        } else {
+            // New Session
+            for(let k in items) inventory[k] = { state: 'idle' };
+        }
+    }
+
+    function saveState() {
+        const packet = {
+            inventory: inventory,
+            items: items
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(packet));
+    }
+
+    window.resetData = function() {
+        if(confirm("Clear all data? This cannot be undone.")) {
+            localStorage.removeItem(STORAGE_KEY);
+            location.reload();
+        }
+    }
+
+    // --- INIT ---
+    function init() {
+        loadState();
+        
+        // If this is a fresh load > 12 PM and no data, maybe auto-trigger wizard? 
+        // Logic: if all idle and time > 12, start wizard.
+        const now = new Date();
+        const allIdle = Object.values(inventory).every(x => x.state === 'idle');
+        if (now.getHours() >= 12 && allIdle) {
+            startWizard();
+        }
+
+        initResizer();
+        renderGrid();
+        setInterval(tick, 1000);
+        tick(); 
+    }
+
+    // --- JS RESIZER ---
+    function initResizer() {
+        const handle = document.getElementById('dragHandle');
+        const sidebar = document.getElementById('sidebarSection');
+        let startY, startHeight;
+
+        handle.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            startY = e.touches[0].clientY;
+            startHeight = sidebar.offsetHeight;
+            document.addEventListener('touchmove', onTouchMove, { passive: false });
+            document.addEventListener('touchend', stopDrag);
+        });
+
+        function onTouchMove(e) {
+            const currentY = e.touches[0].clientY;
+            const newHeight = startHeight + (currentY - startY);
+            if (newHeight > 100 && newHeight < window.innerHeight * 0.7) {
+                sidebar.style.height = `${newHeight}px`;
+            }
+        }
+
+        handle.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            startY = e.clientY;
+            startHeight = sidebar.offsetHeight;
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', stopDrag);
+        });
+
+        function onMouseMove(e) {
+            const currentY = e.clientY;
+            const newHeight = startHeight + (currentY - startY);
+             if (newHeight > 100 && newHeight < window.innerHeight * 0.7) {
+                sidebar.style.height = `${newHeight}px`;
+            }
+        }
+
+        function stopDrag() {
+            document.removeEventListener('touchmove', onTouchMove);
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('touchend', stopDrag);
+            document.removeEventListener('mouseup', stopDrag);
+        }
+    }
+
+    // --- CORE LOGIC ---
+
+    function format12h(dateOrMinutes) {
+        let h, m;
+        if (dateOrMinutes instanceof Date) {
+            h = dateOrMinutes.getHours();
+            m = dateOrMinutes.getMinutes();
+        } else {
+            h = Math.floor(dateOrMinutes / 60);
+            m = dateOrMinutes % 60;
+        }
+        
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        const h12 = h % 12 || 12; 
+        return `${h12}:${m.toString().padStart(2,'0')}<span class="ampm-small">${ampm}</span>`;
+    }
+
+    function tick() {
+        const now = new Date();
+        document.getElementById('clock').innerText = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+        updateCards(now);
+        updateSchedule(now);
+    }
+
+    window.toggleFirstBatch = function() {
+        showFirstBatch = !showFirstBatch;
+        const btn = document.getElementById('btnFirstBatch');
+        if(showFirstBatch) btn.classList.add('active');
+        else btn.classList.remove('active');
+        tick();
+    };
+
+    window.addTime = function(code, mins) {
+        if(!inventory[code] || (inventory[code].state !== 'fresh' && inventory[code].state !== 'refilling')) {
+            alert("Only available for active items");
+            return;
+        }
+        const currentExp = inventory[code].expireTime;
+        inventory[code].expireTime = new Date(currentExp.getTime() + mins * 60000);
+        saveState(); // SAVE
+        tick();
+    };
+
+    function renderGrid() {
+        const grid = document.getElementById('cardGrid');
+        grid.innerHTML = '';
+        Object.keys(items).forEach(code => {
+            const def = items[code];
+            const isTea = ['rt', 'bt', 'gt', 'ot'].includes(code);
+            const addVal = isTea ? 5 : 10;
+
+            const div = document.createElement('div');
+            div.className = 'card';
+            div.id = `card-${code}`;
+            div.innerHTML = `
+                <div class="card-header">
+                    <div class="header-title-group">
+                        <span id="name-${code}">${def.name}</span>
+                        <button class="extend-btn" onclick="addTime('${code}', ${addVal})">+${addVal}m</button>
+                    </div>
+                    <span class="edit-link" onclick="openEdit('${code}')">Edit</span>
+                </div>
+                
+                <div class="display-area">
+                    <div class="main-val" id="val-${code}">--:--</div>
+                    <div class="sub-lbl" id="lbl-${code}">Idle</div>
+                    <div class="mini-timer" id="mini-${code}"></div>
+                </div>
+
+                <div class="refill-box" id="refill-${code}" style="display:none">
+                    <span class="refill-label">Cooking timer:</span>
+                    <span class="refill-timer" id="refill-time-${code}">00:00</span>
+                </div>
+
+                <button class="btn" id="btn-${code}" onclick="action('${code}')">Start Cook</button>
+            `;
+            grid.appendChild(div);
+        });
+    }
+
+    function updateCards(now) {
+        Object.keys(items).forEach(code => {
+            const data = inventory[code];
+            const def = items[code];
+            const el = document.getElementById(`card-${code}`);
+            const nameEl = document.getElementById(`name-${code}`);
+            const valEl = document.getElementById(`val-${code}`);
+            const lblEl = document.getElementById(`lbl-${code}`);
+            const miniEl = document.getElementById(`mini-${code}`);
+            const btnEl = document.getElementById(`btn-${code}`);
+            const refillBox = document.getElementById(`refill-${code}`);
+            const refillTimeEl = document.getElementById(`refill-time-${code}`);
+
+            if(nameEl) nameEl.innerText = def.name;
+
+            el.className = 'card';
+            refillBox.style.display = 'none';
+
+            if (data.state === 'idle') {
+                el.classList.add('st-idle');
+                valEl.innerText = '--:--';
+                lblEl.innerText = 'Ready';
+                miniEl.innerText = '';
+                btnEl.innerText = 'Start Cook';
+            }
+            else if (data.state === 'cooking') {
+                el.classList.add('st-cooking');
+                const rem = def.cookTime - (now - data.startTime)/60000;
+                valEl.innerText = formatDuration(rem);
+                lblEl.innerText = 'Cooking...';
+                miniEl.innerText = '';
+                if (rem <= 0) {
+                    valEl.innerText = "DONE";
+                    btnEl.innerText = "Confirm Ready";
+                } else {
+                    btnEl.innerText = "Cooking...";
+                }
+            }
+            else if (data.state === 'fresh') {
+                handleFresh(el, valEl, lblEl, miniEl, btnEl, data, now, false);
+            }
+            else if (data.state === 'refilling') {
+                handleFresh(el, valEl, lblEl, miniEl, btnEl, data, now, true);
+                el.classList.add('st-refill');
+                refillBox.style.display = 'flex';
+                
+                const rem = def.cookTime - (now - data.refillStart)/60000;
+                refillTimeEl.innerText = formatDuration(rem);
+                
+                if (rem <= 0) {
+                    refillTimeEl.innerText = "READY";
+                    btnEl.innerText = "Confirm New Batch";
+                } else {
+                    btnEl.innerText = "Click to Finish";
+                }
+            }
+        });
+    }
+
+    function handleFresh(el, valEl, lblEl, miniEl, btnEl, data, now, isRefill) {
+        el.classList.add('st-fresh');
+        const diffMs = data.expireTime - now;
+        const diffMins = Math.floor(diffMs / 60000);
+        valEl.innerHTML = format12h(data.expireTime);
+
+        if (diffMs > 0) {
+            const h = Math.floor(diffMins/60);
+            const m = diffMins % 60;
+            miniEl.innerText = `${h}h ${m}m remaining`;
+        } else {
+            miniEl.innerText = 'Discard';
+        }
+
+        if (diffMs < 0) {
+            el.classList.add('st-exp');
+            lblEl.innerText = "EXPIRED";
+        } else if (diffMins < 30) {
+            el.classList.add('st-warn');
+            lblEl.innerText = "EXPIRING SOON";
+        } else {
+            lblEl.innerText = "EXPIRES AT";
+        }
+
+        if(!isRefill) btnEl.innerText = "Start Refill";
+    }
+
+    function updateSchedule(now) {
+        const list = document.getElementById('scheduleList');
+        const cm = now.getHours()*60 + now.getMinutes();
+        const closeMins = KITCHEN_CLOSE_HOUR * 60; 
+        
+        let tasks = [];
+
+        // 1. FIRST BATCH (Toggle Logic)
+        if (showFirstBatch) {
+            firstBatchSchedule.forEach(task => {
+                const taskMins = parseTime(task.t);
+                tasks.push({c: task.c, m: taskMins, type: 'first', desc: 'First Batch'});
+            });
+        }
+
+        // 2. REFILLS
+        Object.keys(inventory).forEach(code => {
+            const d = inventory[code];
+            if (d.state === 'fresh' || d.state === 'refilling') {
+                const expMins = d.expireTime.getHours() * 60 + d.expireTime.getMinutes();
+                if (expMins <= closeMins) {
+                    const refillAt = new Date(d.expireTime.getTime() - items[code].cookTime*60000);
+                    const rm = refillAt.getHours()*60 + refillAt.getMinutes();
+                    if(rm > cm - 60 && d.state !== 'refilling') {
+                        tasks.push({c:code, m:rm, type:'refill', desc: 'Refill Needed'});
+                    }
+                }
+            }
+        });
+        
+        tasks.sort((a,b) => a.m - b.m);
+        list.innerHTML = '';
+        
+        if (tasks.length === 0) {
+            list.innerHTML = '<div style="text-align:center; padding:10px; color:#666; font-size:0.9rem">No upcoming tasks<br><span style="font-size:0.8rem; opacity:0.7">Click 1️⃣ for First Batch</span></div>';
+        }
+
+        tasks.slice(0,6).forEach(t => {
+            const div = document.createElement('div');
+            let rowClass = 'highlight';
+            if (t.type === 'refill') rowClass = 'refill';
+            if (t.type === 'first') rowClass = 'first';
+
+            div.className = `task-row ${rowClass}`;
+            div.innerHTML = `
+                <div><div style="font-weight:bold">${items[t.c].name}</div><div style="font-size:0.8rem;opacity:0.7">${t.desc}</div></div>
+                <div class="task-time">${format12h(t.m)}</div>
+            `;
+            list.appendChild(div);
+        });
+    }
+
+    window.action = function(code) {
+        const d = inventory[code];
+        if (d.state === 'idle') {
+            inventory[code] = { state: 'cooking', startTime: new Date() };
+        } else if (d.state === 'cooking') {
+            setAsFresh(code, new Date());
+        } else if (d.state === 'fresh') {
+            d.state = 'refilling';
+            d.refillStart = new Date();
+        } else if (d.state === 'refilling') {
+            setAsFresh(code, new Date());
+        }
+        saveState(); // SAVE
+        tick();
+    };
+
+    function setAsFresh(code, cookedTime) {
+        const def = items[code];
+        const exp = new Date(cookedTime.getTime() + def.shelfLife * 60000);
+        inventory[code] = { state: 'fresh', startTime: cookedTime, expireTime: exp };
+    }
+
+    // --- WIZARD / EDIT / CONFIG ---
+    function startWizard() {
+        wizardQueue = Object.keys(items);
+        wizardIdx = 0;
+        const now = new Date();
+        document.getElementById('wizardInput').value = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}`;
+        updateWizardUI();
+        document.getElementById('wizardModal').style.display = 'flex';
+    }
+
+    function updateWizardUI() {
+        if (wizardIdx >= wizardQueue.length) {
+            document.getElementById('wizardModal').style.display = 'none';
+            saveState(); // SAVE AFTER WIZARD
+            tick();
+            return;
+        }
+        const code = wizardQueue[wizardIdx];
+        document.getElementById('wizardProgress').innerText = `Item ${wizardIdx+1} / ${wizardQueue.length}`;
+        document.getElementById('wizardName').innerText = items[code].name;
+        document.getElementById('wizardInput').focus();
+    }
+
+    window.wizardSave = function() {
+        const code = wizardQueue[wizardIdx];
+        const val = document.getElementById('wizardInput').value;
+        const [h,m] = val.split(':').map(Number);
+        const now = new Date();
+        const expDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m);
+        const cookDate = new Date(expDate.getTime() - items[code].shelfLife * 60000);
+        inventory[code] = { state: 'fresh', startTime: cookDate, expireTime: expDate };
+        wizardIdx++;
+        updateWizardUI();
+    };
+
+    window.wizardSkip = function() {
+        wizardIdx++;
+        updateWizardUI();
+    };
+
+    window.openEdit = function(code) {
+        editTarget = code;
+        const d = inventory[code];
+        const now = new Date();
+        let defaultTime = now;
+        if (d.expireTime) defaultTime = d.expireTime;
+        const h = defaultTime.getHours().toString().padStart(2,'0');
+        const m = defaultTime.getMinutes().toString().padStart(2,'0');
+        document.getElementById('editInput').value = `${h}:${m}`;
+        document.getElementById('editTitle').innerText = `Edit ${items[code].name}`;
+        document.getElementById('editModal').style.display = 'flex';
+    };
+
+    window.saveEdit = function() {
+        if(!editTarget) return;
+        const val = document.getElementById('editInput').value;
+        const [h,m] = val.split(':').map(Number);
+        const now = new Date();
+        const expDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m);
+        const cookDate = new Date(expDate.getTime() - items[editTarget].shelfLife * 60000);
+        inventory[editTarget] = { state: 'fresh', startTime: cookDate, expireTime: expDate };
+        saveState(); // SAVE
+        closeEdit();
+        tick();
+    };
+
+    window.closeEdit = function() {
+        document.getElementById('editModal').style.display = 'none';
+        editTarget = null;
+    };
+
+    window.openConfig = function() {
+        const container = document.getElementById('configContainer');
+        container.innerHTML = '';
+        Object.keys(items).forEach(code => {
+            const def = items[code];
+            const div = document.createElement('div');
+            div.className = 'config-row';
+            div.innerHTML = `
+                <h4>${def.name}</h4>
+                <div class="config-inputs">
+                    <div class="cfg-grp"><label>Name</label><input type="text" class="cfg-input" id="cfg-name-${code}" value="${def.name}"></div>
+                    <div class="cfg-grp"><label>Cook</label><input type="number" class="cfg-input" id="cfg-cook-${code}" value="${def.cookTime}"></div>
+                    <div class="cfg-grp"><label>Shelf</label><input type="number" class="cfg-input" id="cfg-shelf-${code}" value="${def.shelfLife}"></div>
+                </div>
+            `;
+            container.appendChild(div);
+        });
+        document.getElementById('configModal').style.display = 'flex';
+    };
+
+    window.saveConfig = function() {
+        Object.keys(items).forEach(code => {
+            items[code].name = document.getElementById(`cfg-name-${code}`).value;
+            items[code].cookTime = parseInt(document.getElementById(`cfg-cook-${code}`).value);
+            items[code].shelfLife = parseInt(document.getElementById(`cfg-shelf-${code}`).value);
+        });
+        saveState(); // SAVE CONFIG
+        renderGrid();
+        tick();
+        closeConfig();
+    };
+
+    window.closeConfig = function() {
+        document.getElementById('configModal').style.display = 'none';
+    };
+
+    window.toggleTheme = function() {
+        const html = document.documentElement;
+        if (html.getAttribute('data-theme') === 'dark') {
+            html.setAttribute('data-theme', 'light');
+        } else {
+            html.setAttribute('data-theme', 'dark');
+        }
+    };
+
+    function formatDuration(m) {
+        const abs = Math.abs(m);
+        const h = Math.floor(abs/60);
+        const mn = Math.floor(abs%60);
+        return `${m<0?'-':''}${h}:${mn.toString().padStart(2,'0')}`;
+    }
+    function parseTime(t) { const [h,m]=t.split(':').map(Number); return h*60+m; }
+
+    init();
+
+</script>
+</body>
 </html>
